@@ -1,15 +1,10 @@
-# Use Python 3.11 image with Playwright support
-FROM mcr.microsoft.com/playwright/python:v1.45.0-jammy
+FROM python:3.11-slim
 
-# Set working directory
 WORKDIR /app
 
 # Copy requirements and install dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
-
-# Install Playwright browsers (Chromium only)
-RUN playwright install chromium
 
 # Copy application code
 COPY . .
@@ -17,9 +12,12 @@ COPY . .
 # Expose port
 EXPOSE 8000
 
-# Set environment variables
+# Environment variables
 ENV PORT=8000
 ENV PYTHONUNBUFFERED=1
+ENV MAX_CONCURRENT=5
+ENV TIMEOUT=30000
+ENV CACHE_TTL=900
 
-# Start the application
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Start with single worker (HTTP requests are lightweight)
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]
